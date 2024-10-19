@@ -15,9 +15,29 @@ struct TeamScores {
     goals_conceded: u8,
 }
 
+fn insert_or_update_score<'a>(team_name: &'a str, team_score: u8, conceded: u8,scores: &mut HashMap<&'a str, TeamScores>) {
+    let score = scores.get(team_name);
+        match score {
+            Some(score) => {
+                let team_score = TeamScores{
+                    goals_scored: score.goals_scored + team_score, 
+                    goals_conceded: score.goals_conceded + conceded
+                };
+                scores.insert(team_name, team_score);
+            },
+            None => {
+                let team_score = TeamScores{
+                    goals_scored: team_score, 
+                    goals_conceded: conceded
+                };
+                scores.insert(team_name, team_score);
+            }
+        }
+}
+
 fn build_scores_table(results: &str) -> HashMap<&str, TeamScores> {
     // The name of the team is the key and its associated struct is the value.
-    let mut scores = HashMap::new();
+    let mut scores: HashMap<&str, TeamScores> = HashMap::new();
 
     for line in results.lines() {
         let mut split_iterator = line.split(',');
@@ -31,7 +51,10 @@ fn build_scores_table(results: &str) -> HashMap<&str, TeamScores> {
         // Keep in mind that goals scored by team 1 will be the number of goals
         // conceded by team 2. Similarly, goals scored by team 2 will be the
         // number of goals conceded by team 1.
+        insert_or_update_score(team_1_name, team_1_score, team_2_score, &mut scores);
+        insert_or_update_score(team_2_name, team_2_score, team_1_score, &mut scores);
     }
+    
 
     scores
 }
